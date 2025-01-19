@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2FA Generator and Verifier</title>
+  <script src="https://cdn.jsdelivr.net/npm/otplib@12.0.0/dist/otplib.browser.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { margin: 10px; padding: 10px; }
+    #qr-code { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>2FA Generator and Verifier</h1>
+  
+  <!-- Generate 2FA secret form -->
+  <h2>Generate 2FA Secret</h2>
+  <form id="generate-form">
+    <label for="username">Username: </label>
+    <input type="text" id="username" name="username" required />
+    <button type="submit">Generate</button>
+  </form>
+
+  <div id="qr-code"></div>
+  <div id="secret-container"></div>
+  
+  <!-- Verify 2FA code form -->
+  <h2>Verify 2FA Code</h2>
+  <form id="verify-form">
+    <label for="verify-username">Username: </label>
+    <input type="text" id="verify-username" required />
+    <label for="token">Token: </label>
+    <input type="text" id="token" required />
+    <button type="submit">Verify</button>
+  </form>
+  <div id="verification-result"></div>
+
+  <script>
+    // Function to generate a 2FA secret and QR code
+    document.getElementById('generate-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value;
+
+      if (!username) {
+        alert('Please enter a username!');
+        return;
+      }
+
+      // Send a request to backend to generate secret
+      fetch('http://localhost:3000/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username })
+      })
+      .then(response => response.json())
+      .then(data => {
+        const { secret, otpauth } = data;
+        
+        // Display the QR Code
+        const qrCodeUrl = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(otpauth)}`;
+        document.getElementById('qr-code').innerHTML = `<img src="${qrCodeUrl}" alt="QR Code" />`;
+        
+        // Display the secret
+        document.getElementById('secret-container').innerText = `Secret: ${secret}`;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to generate 2FA secret');
+      });
+    });
+
+    // Function to verify the 2FA token
+    document.getElementById('verify-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById('verify-username').value;
+      const token = document.getElementById('token').value;
+
+      if (!username || !token) {
+        alert('Please enter both username and token!');
+        return;
+      }
+
+      // Send a request to backend to verify token
+      fetch('http://localhost:3000/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, token })
+      })
+      .then(response => response.json())
+      .then(data => {
+        const result = data.valid ? 'Token is valid!' : 'Invalid token.';
+        document.getElementById('verification-result').innerText = result;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to verify 2FA token');
+      });
+    });
+  </script>
+</body>
+</html>
