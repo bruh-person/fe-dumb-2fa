@@ -49,7 +49,7 @@
       }
 
       // Send a request to backend to generate secret
-      fetch('http://localhost:3000/generate', {
+      fetch('https://hay-printing-automated-apparently.trycloudflare.com/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -86,7 +86,7 @@
       }
 
       // Send a request to backend to verify token
-      fetch('http://localhost:3000/verify', {
+      fetch('https://hay-printing-automated-apparently.trycloudflare.com/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
